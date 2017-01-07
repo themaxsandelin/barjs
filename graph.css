@@ -1,11 +1,42 @@
 @charset "UTF-8";
 
+/* --------------------
+  General, container and wrapper CSS
+-------------------- */
+
+.graphContainer,
+.graphContainer * {
+  box-sizing: border-box;
+}
+
 .graphContainer {
   padding: 0 0 40px 60px;
   position: relative;
 }
 
-.axis {
+.graphContainer .graphWrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+  border: 1px solid #aaa;
+}
+
+/* --------------------
+  Graph CSS
+-------------------- */
+
+.graphContainer .graphWrapper .graph {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* --------------------
+  Axis CSS
+-------------------- */
+
+.graphContainer .axis {
   width: 100%;
   height: 100%;
   position: absolute;
@@ -14,37 +45,35 @@
   z-index: 1;
 }
 
-.axis .label {
+.graphContainer .axis .label {
   width: 100%;
   height: 20px;
   padding: 0 0 0 60px;
 }
 
-.axis .label,
-.axis .iterations {
+.graphContainer .axis .label,
+.graphContainer .axis .iterations {
   position: absolute;
   left: 0;
 }
 
-/* X Axis */
-.axis.x .label {
+.graphContainer .axis.x .label {
   bottom: 0;
 }
 
-.axis.x .iterations {
+.graphContainer .axis.x .iterations {
   width: 100%;
   height: 20px;
   bottom: 20px;
   padding: 0 0 0 60px;
 }
 
-/* Y Axis */
-.axis.y .label,
-.axis.y .iterations {
+.graphContainer .axis.y .label,
+.graphContainer .axis.y .iterations {
   top: 0;
 }
 
-.axis.y .iterations {
+.graphContainer .axis.y .iterations {
   width: 60px;
   height: 100%;
   padding: 20px 0 0 0;

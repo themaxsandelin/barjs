@@ -8,7 +8,32 @@
     <script src="graph.js"></script>
     
     <script type="text/javascript">
-      var graph = new Graph('#graph', []);
+      var data = {
+        labels: {
+          x: 'Weight',
+          y: 'Height'
+        },
+        entries: [
+          {
+            x: 90,
+            y: 198
+          },
+          {
+            x: 50,
+            y: 180
+          },
+          {
+            x: 110,
+            y: 190
+          },
+          {
+            x: 78,
+            y: 183
+          }
+        ]
+      };
+      
+      var graph = new Graph('#graph', data);
     </script>
   </head>
   <body>

@@ -10,6 +10,7 @@ function Graph (container, data) {
     if (!this.container.classList.contains('graphContainer')) this.container.classList.add('graphContainer');
   }
   
+  // Creates and appends all neccessary elements for the graph
   function buildGraphElements () {
     
     // Builds both axis elements with required child elements.
@@ -44,9 +45,22 @@ function Graph (container, data) {
       container.appendChild(xAxis);
     }
     
+    function buildGraph (container) {
+      var wrapper = document.createElement('div');
+      wrapper.classList.add('graphWrapper');
+      
+      var graph = document.createElement('div');
+      graph.classList.add('graph');
+      
+      wrapper.appendChild(graph);
+      container.appendChild(wrapper);
+    }
+    
     buildAxisElements(this.container);
+    buildGraph(this.container);
   }
   
+  // Initial setup scripts that runs once the DOM is loaded
   function setup () {
     defineContainer(this.container);
     buildGraphElements();
