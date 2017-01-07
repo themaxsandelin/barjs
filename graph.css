@@ -1,0 +1,51 @@
+@charset "UTF-8";
+
+.graphContainer {
+  padding: 0 0 40px 60px;
+  position: relative;
+}
+
+.axis {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.axis .label {
+  width: 100%;
+  height: 20px;
+  padding: 0 0 0 60px;
+}
+
+.axis .label,
+.axis .iterations {
+  position: absolute;
+  left: 0;
+}
+
+/* X Axis */
+.axis.x .label {
+  bottom: 0;
+}
+
+.axis.x .iterations {
+  width: 100%;
+  height: 20px;
+  bottom: 20px;
+  padding: 0 0 0 60px;
+}
+
+/* Y Axis */
+.axis.y .label,
+.axis.y .iterations {
+  top: 0;
+}
+
+.axis.y .iterations {
+  width: 60px;
+  height: 100%;
+  padding: 20px 0 0 0;
+}
