@@ -1,8 +1,6 @@
-function Graph (container, data) {
+function Graph (container, parameters) {
   this.container = container;
-  this.data = data;
-  this.stats = {};
-  this.filter = {};
+  this.parameters = parameters;
   
   // Defines the container selector and adds any missing classes to it
   function defineContainer (container) {
