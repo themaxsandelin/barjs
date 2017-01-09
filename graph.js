@@ -6,7 +6,7 @@ class Graph {
     this.stats = {};
     this.mode = parameters.mode || 'vertical';
     this.defaults = {
-      iterations: 2
+      iterations: 0
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -15,6 +15,7 @@ class Graph {
       this.calculateStats();
       this.renderAxisLabels();
       this.renderIterations();
+      this.renderEntries();
     });
   }
 
@@ -123,7 +124,7 @@ class Graph {
     for (let a = 0; a < entries.length; a++) {
       const entry = entries[a];
       axies.x.max = (axies.x.max < entry.x) ? entry.x:axies.x.max;
-      axies.y.max = (axies.y.max < entry.y) ? entry.x:axies.y.max;
+      axies.y.max = (axies.y.max < entry.y) ? entry.y:axies.y.max;
 
       if (this.mode === 'vertical') axies.x.total += entry.x;
       if (this.mode === 'horizontal') axies.y.total += entry.y;
@@ -138,9 +139,9 @@ class Graph {
       height: this.container.querySelector('.graph').offsetHeight
     };
 
-    if (this.parameters.iterations !== null) {
-      if (this.parameters.iterations !== null) axies.x.iterations.count = this.parameters.iterations.x;
-      if (this.parameters.iterations !== null) axies.y.iterations.count = this.parameters.iterations.y;
+    if (this.parameters.iterations !== undefined) {
+      if (this.parameters.iterations.x !== undefined) axies.x.iterations.count = this.parameters.iterations.x;
+      if (this.parameters.iterations.y !== undefined) axies.y.iterations.count = this.parameters.iterations.y;
     }
 
     axies.x.iterations.size = (graph.width - axies.x.iterations.count) / (axies.x.iterations.count + 1);
@@ -195,6 +196,39 @@ class Graph {
 
     if (axis !== 'y') render(this.stats.axies.x);
     if (axis !== 'x') render(this.stats.axies.y);
+  }
+
+  renderEntries () {
+
+    function calculateEntryProportions (entry) {
+      const entryCount = this.parameters.entries.length;
+      const width = this.stats.graph.width - ((this.mode === 'vertical') ? (2 + (entryCount * 2)):0);
+      const height = this.stats.graph.height - ((this.mode === 'horizontal') ? (2 + (entryCount * 2)):0);
+
+      // Calculate width and height percentage
+      const widthPercentage = entry.x / this.stats.axies.x.total;
+      const heightPercentage = entry.y / this.stats.axies.y.total;
+
+      // Return width and height calculations
+      return {
+        width: Math.floor(width * widthPercentage),
+        height: Math.floor(height * heightPercentage)
+      };
+    }
+
+    for (let e = 0; e < this.parameters.entries.length; e++) {
+      const entry = this.parameters.entries[e];
+      const proportions = calculateEntryProportions.bind(this)(entry, this.stats, this.parameters.entries.length);
+
+      const bar = document.createElement('div');
+      bar.classList.add('bar');
+      bar.style.width = proportions.width + 'px';
+      bar.style.height = proportions.height + 'px';
+
+      this.stats.graph.element.appendChild(bar);
+    }
+
+    if (this.mode === 'horizontal') this.stats.graph.element.classList.add('horizontal');
   }
 
 }

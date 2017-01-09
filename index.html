@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
     <title>Graph.js by Max Sandelin</title>
 
@@ -8,42 +8,66 @@
     <script src="graph.js"></script>
 
     <script type="text/javascript">
-      var params = {
-        mode: 'vertical',
+    var params = {
+        mode: 'horizontal',
         iterations: {
-            x: 2,
-            y: 2
+            x: 10,
+            y: 3
         },
         labels: {
-          x: 'Weight',
-          y: 'Height'
+            x: 'Weight',
+            y: 'Height'
         },
         entries: [
-          {
-            x: 90,
-            y: 198
-          },
-          {
-            x: 50,
-            y: 180
-          },
-          {
-            x: 110,
-            y: 190
-          },
-          {
-            x: 78,
-            y: 183
-          }
+            {
+                x: 90,
+                y: 198
+            },
+            {
+                x: 50,
+                y: 180
+            },
+            {
+                x: 110,
+                y: 190
+            },
+            {
+                x: 78,
+                y: 183
+            },
+            {
+                x: 50,
+                y: 210
+            },
+            {
+                x: 90,
+                y: 198
+            },
+            {
+                x: 50,
+                y: 180
+            },
+            {
+                x: 110,
+                y: 190
+            },
+            {
+                x: 78,
+                y: 183
+            },
+            {
+                x: 50,
+                y: 210
+            }
         ]
-      };
+    };
 
-      var graph = new Graph('#graph', params);
+    var graph = new Graph('#graph', params);
     </script>
-  </head>
-  <body>
+</head>
+<body>
 
     <div id="graph" style="width: 600px; height: 400px;"></div>
 
-  </body>
+</body>
 </html>
