@@ -173,7 +173,7 @@ class Graph {
         const value = x * axis.iterations.value;
 
         const label = document.createElement('p');
-        label.innerText = (x > 0 && x < (count - 1)) ? value:((x === 0) ? 0:axis.total);
+        label.innerText = (x > 0 && x < (count - 1)) ? value.toFixed(1):((x === 0) ? 0:axis.total);
 
         if (x > 0 && x < (count - 1)) {
           if (axis.id === 'x') {
