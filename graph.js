@@ -4,6 +4,7 @@ class Graph {
     this.container = container;
     this.parameters = parameters;
     this.stats = {};
+    this.mode = parameters.mode || 'vertical';
     this.defaults = {
       iterations: 2
     };
@@ -124,9 +125,12 @@ class Graph {
       axies.x.max = (axies.x.max < entry.x) ? entry.x:axies.x.max;
       axies.y.max = (axies.y.max < entry.y) ? entry.x:axies.y.max;
 
-      axies.x.total += entry.x;
-      axies.y.total += entry.y;
+      if (this.mode === 'vertical') axies.x.total += entry.x;
+      if (this.mode === 'horizontal') axies.y.total += entry.y;
     }
+
+    if (this.mode === 'vertical') axies.y.total = axies.y.max;
+    if (this.mode === 'horizontal') axies.x.total = axies.x.max;
 
     const graph = {
       element: this.container.querySelector('.graph'),
@@ -139,11 +143,11 @@ class Graph {
       if (this.parameters.iterations !== null) axies.y.iterations.count = this.parameters.iterations.y;
     }
 
-    axies.x.iterations.size = graph.width / (axies.x.iterations.count + 1);
-    axies.x.iterations.value = parseFloat(axies.x.max / (axies.x.iterations.count + 1)).toFixed(1);
+    axies.x.iterations.size = (graph.width - axies.x.iterations.count) / (axies.x.iterations.count + 1);
+    axies.x.iterations.value = parseFloat(axies.x.total / (axies.x.iterations.count + 1)).toFixed(1);
 
-    axies.y.iterations.size = graph.height / (axies.y.iterations.count + 1);
-    axies.y.iterations.value = parseFloat(axies.y.max / (axies.y.iterations.count + 1)).toFixed(1);
+    axies.y.iterations.size = (graph.height - axies.y.iterations.count) / (axies.y.iterations.count + 1);
+    axies.y.iterations.value = parseFloat(axies.y.total / (axies.y.iterations.count + 1)).toFixed(1);
 
     this.stats = {
       axies: axies,
@@ -168,10 +172,14 @@ class Graph {
         const value = x * axis.iterations.value;
 
         const label = document.createElement('p');
-        label.innerText = (x > 0 && x < (count - 1)) ? value:((x === 0) ? 0:axis.max);
+        label.innerText = (x > 0 && x < (count - 1)) ? value:((x === 0) ? 0:axis.total);
 
         if (x > 0 && x < (count - 1)) {
-          label.style[(axis.id === 'x') ? 'left':'top'] = (axis.iterations.size * x) + 'px';
+          if (axis.id === 'x') {
+            label.style.left = (axis.iterations.size * x) + 'px';
+          } else {
+            label.style.bottom = (axis.iterations.size * x) + 'px';
+          }
 
           const lines = axis.element.querySelector('.lines');
           const line = document.createElement('div');
