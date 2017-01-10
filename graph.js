@@ -3,16 +3,16 @@ class Graph {
   constructor (container, parameters) {
     this.container = container;
     this.parameters = parameters;
-    this.stats = {};
-    this.mode = parameters.mode || 'vertical';
-    this.defaults = {
-      iterations: 0
+    this.axies = {
+      x: {},
+      y: {}
     };
+    this.mode = parameters.mode || 'vertical';
 
     document.addEventListener('DOMContentLoaded', () => {
       this.defineContainer();
       this.buildGraphElements();
-      this.calculateStats();
+      this.calculateAxies();
       this.renderAxisLabels();
       this.renderIterations();
       this.renderEntries();
@@ -94,71 +94,52 @@ class Graph {
 
     buildAxisElements(this.container);
     buildGraph(this.container);
+    this.graph = this.container.querySelector('.graph');
   }
 
-  calculateStats () {
-    this.graph = this.container.querySelector('.graph');
+  calculateAxies () {
+    const modes = {
+      x: 'horizontal',
+      y: 'vertical'
+    };
+    for (let i = 0; i < 2; i++) {
+      const axis = (i) ? 'x':'y';
+      const entries = this.parameters.entries;
+      const totalIsMax = this.mode === modes[axis];
 
-    const entries = this.parameters.entries;
-    const axies = {
-      x: {
-        id: 'x',
+      this.axies[axis] = {
+        id: axis,
         iterations: {
-          count: this.defaults.iterations,
+          count: 0,
           size: 0,
           value: 0
         },
-        element: this.container.querySelector('.axis.x'),
+        element: this.container.querySelector('.axis.'+axis),
+        label: this.parameters.labels[axis],
         max: 0,
-        total: 0,
-        label: this.parameters.labels.x
-      },
-      y: {
-        id: 'y',
-        iterations: {
-          count: this.defaults.iterations,
-          size: 0,
-          value: 0
-        },
-        element: this.container.querySelector('.axis.y'),
-        max: 0,
-        total: 0,
-        label: this.parameters.labels.y
+        total: 0
+      };
+
+      for (let e = 0; e < entries.length; e++) {
+        this.axies[axis].max = (this.axies[axis].max < entries[e][axis]) ? entries[e][axis]:this.axies[axis].max;
+        if (!totalIsMax) this.axies[axis].total += entries[e][axis];
       }
-    };
+      if (totalIsMax) this.axies[axis].total = this.axies[axis].max;
 
-    for (let a = 0; a < entries.length; a++) {
-      const entry = entries[a];
-      axies.x.max = (axies.x.max < entry.x) ? entry.x:axies.x.max;
-      axies.y.max = (axies.y.max < entry.y) ? entry.y:axies.y.max;
+      if (this.parameters.iterations) {
+        const count = (this.parameters.iterations[axis]) ? this.parameters.iterations[axis]:this.parameters.iterations;
 
-      if (this.mode === 'vertical') axies.x.total += entry.x;
-      if (this.mode === 'horizontal') axies.y.total += entry.y;
+        this.axies[axis].iterations.count = count;
+        this.axies[axis].iterations.size = 100 / (count + 1);
+        this.axies[axis].iterations.value = parseFloat(this.axies[axis].total / (count + 1).toFixed(1));
+      }
     }
-
-    if (this.mode === 'vertical') axies.y.total = axies.y.max;
-    if (this.mode === 'horizontal') axies.x.total = axies.x.max;
-
-    if (this.parameters.iterations !== undefined) {
-      if (this.parameters.iterations.x !== undefined) axies.x.iterations.count = this.parameters.iterations.x;
-      if (this.parameters.iterations.y !== undefined) axies.y.iterations.count = this.parameters.iterations.y;
-    }
-
-    axies.x.iterations.size = 100 / (axies.x.iterations.count + 1);
-    axies.x.iterations.value = parseFloat(axies.x.total / (axies.x.iterations.count + 1)).toFixed(1);
-
-    axies.y.iterations.size = 100 / (axies.y.iterations.count + 1);
-    axies.y.iterations.value = parseFloat(axies.y.total / (axies.y.iterations.count + 1)).toFixed(1);
-
-    this.stats = {
-      axies: axies
-    };
   }
 
   renderAxisLabels () {
+    const axies = [ 'x', 'y' ];
     for (let i = 0; i < 2; i++) {
-      const axis = (i === 0) ? this.stats.axies.x:this.stats.axies.y;
-      axis.element.querySelector('.label').innerText = axis.label;
+      this.axies[axies[i]].element.querySelector('.label').innerText = this.axies[axies[i]].label;
     }
   }
 
@@ -193,8 +174,8 @@ class Graph {
       }
     }
 
-    if (axis !== 'y') render(this.stats.axies.x);
-    if (axis !== 'x') render(this.stats.axies.y);
+    if (axis !== 'y') render(this.axies.x);
+    if (axis !== 'x') render(this.axies.y);
   }
 
   renderEntries () {
@@ -203,8 +184,8 @@ class Graph {
       const graphWidth = this.graph.offsetWidth;
       const graphHeight = this.graph.offsetHeight;
 
-      const width = (entry.x / this.stats.axies.x.total) * (graphWidth - ((this.mode === 'vertical') ? (2 + (this.parameters.entries.length * 2)):0));
-      const height = (entry.y / this.stats.axies.y.total) * (graphHeight - ((this.mode === 'horizontal') ? (2 + (this.parameters.entries.length * 2)):0));
+      const width = (entry.x / this.axies.x.total) * (graphWidth - ((this.mode === 'vertical') ? (2 + (this.parameters.entries.length * 2)):0));
+      const height = (entry.y / this.axies.y.total) * (graphHeight - ((this.mode === 'horizontal') ? (2 + (this.parameters.entries.length * 2)):0));
 
       // Return width and height calculations
       return {
@@ -240,8 +221,8 @@ class Graph {
       const entry = entries[i];
       const bar = bars[i];
 
-      const width = (entry.x / this.stats.axies.x.total) * (graphWidth - ((this.mode === 'vertical') ? (2 + (entries.length * 2)):0));
-      const height = (entry.y / this.stats.axies.y.total) * (graphHeight - ((this.mode === 'horizontal') ? (2 + (entries.length * 2)):0));
+      const width = (entry.x / this.axies.x.total) * (graphWidth - ((this.mode === 'vertical') ? (2 + (entries.length * 2)):0));
+      const height = (entry.y / this.axies.y.total) * (graphHeight - ((this.mode === 'horizontal') ? (2 + (entries.length * 2)):0));
 
       bar.style.width = width + 'px';
       bar.style.height = height + 'px';
