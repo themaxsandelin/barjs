@@ -16,6 +16,10 @@ class Graph {
       this.renderAxisLabels();
       this.renderIterations();
       this.renderEntries();
+
+      window.addEventListener('resize', () => {
+        this.resizeRender();
+      });
     });
   }
 
@@ -144,10 +148,10 @@ class Graph {
       if (this.parameters.iterations.y !== undefined) axies.y.iterations.count = this.parameters.iterations.y;
     }
 
-    axies.x.iterations.size = (graph.width - axies.x.iterations.count) / (axies.x.iterations.count + 1);
+    axies.x.iterations.size = 100 / (axies.x.iterations.count + 1);
     axies.x.iterations.value = parseFloat(axies.x.total / (axies.x.iterations.count + 1)).toFixed(1);
 
-    axies.y.iterations.size = (graph.height - axies.y.iterations.count) / (axies.y.iterations.count + 1);
+    axies.y.iterations.size = 100 / (axies.y.iterations.count + 1);
     axies.y.iterations.value = parseFloat(axies.y.total / (axies.y.iterations.count + 1)).toFixed(1);
 
     this.stats = {
@@ -177,15 +181,15 @@ class Graph {
 
         if (x > 0 && x < (count - 1)) {
           if (axis.id === 'x') {
-            label.style.left = (axis.iterations.size * x) + 'px';
+            label.style.left = (axis.iterations.size * x) + '%';
           } else {
-            label.style.bottom = (axis.iterations.size * x) + 'px';
+            label.style.bottom = (axis.iterations.size * x) + '%';
           }
 
           const lines = axis.element.querySelector('.lines');
           const line = document.createElement('div');
           line.classList.add('line');
-          line.style[(axis.id === 'x') ? 'left':'top'] = (axis.iterations.size * x) + 'px';
+          line.style[(axis.id === 'x') ? 'left':'top'] = (axis.iterations.size * x) + '%';
 
           lines.appendChild(line);
         }
@@ -216,6 +220,8 @@ class Graph {
       };
     }
 
+    this.stats.graph.element.innerHTML = '';
+
     for (let e = 0; e < this.parameters.entries.length; e++) {
       const entry = this.parameters.entries[e];
       const proportions = calculateEntryProportions.bind(this)(entry, this.stats, this.parameters.entries.length);
@@ -229,6 +235,24 @@ class Graph {
     }
 
     if (this.mode === 'horizontal') this.stats.graph.element.classList.add('horizontal');
+  }
+
+  resizeRender () {
+    const graphWidth = this.stats.graph.element.offsetWidth;
+    const graphHeight = this.stats.graph.element.offsetHeight;
+
+    const entries = this.parameters.entries;
+    const bars = this.stats.graph.element.querySelectorAll('.bar');
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const bar = bars[i];
+
+      const width = (entry.x / this.stats.axies.x.total) * (graphWidth - ((this.mode === 'vertical') ? (2 + (entries.length * 2)):0));
+      const height = (entry.y / this.stats.axies.y.total) * (graphHeight - ((this.mode === 'horizontal') ? (2 + (entries.length * 2)):0));
+
+      bar.style.width = width + 'px';
+      bar.style.height = height + 'px';
+    }
   }
 
 }
