@@ -97,6 +97,8 @@ class Graph {
   }
 
   calculateStats () {
+    this.graph = this.container.querySelector('.graph');
+
     const entries = this.parameters.entries;
     const axies = {
       x: {
@@ -137,12 +139,6 @@ class Graph {
     if (this.mode === 'vertical') axies.y.total = axies.y.max;
     if (this.mode === 'horizontal') axies.x.total = axies.x.max;
 
-    const graph = {
-      element: this.container.querySelector('.graph'),
-      width: this.container.querySelector('.graph').offsetWidth,
-      height: this.container.querySelector('.graph').offsetHeight
-    };
-
     if (this.parameters.iterations !== undefined) {
       if (this.parameters.iterations.x !== undefined) axies.x.iterations.count = this.parameters.iterations.x;
       if (this.parameters.iterations.y !== undefined) axies.y.iterations.count = this.parameters.iterations.y;
@@ -155,8 +151,7 @@ class Graph {
     axies.y.iterations.value = parseFloat(axies.y.total / (axies.y.iterations.count + 1)).toFixed(1);
 
     this.stats = {
-      axies: axies,
-      graph: graph
+      axies: axies
     };
   }
 
@@ -205,22 +200,20 @@ class Graph {
   renderEntries () {
 
     function calculateEntryProportions (entry) {
-      const entryCount = this.parameters.entries.length;
-      const width = this.stats.graph.width - ((this.mode === 'vertical') ? (2 + (entryCount * 2)):0);
-      const height = this.stats.graph.height - ((this.mode === 'horizontal') ? (2 + (entryCount * 2)):0);
+      const graphWidth = this.graph.offsetWidth;
+      const graphHeight = this.graph.offsetHeight;
 
-      // Calculate width and height percentage
-      const widthPercentage = entry.x / this.stats.axies.x.total;
-      const heightPercentage = entry.y / this.stats.axies.y.total;
+      const width = (entry.x / this.stats.axies.x.total) * (graphWidth - ((this.mode === 'vertical') ? (2 + (this.parameters.entries.length * 2)):0));
+      const height = (entry.y / this.stats.axies.y.total) * (graphHeight - ((this.mode === 'horizontal') ? (2 + (this.parameters.entries.length * 2)):0));
 
       // Return width and height calculations
       return {
-        width: Math.floor(width * widthPercentage),
-        height: Math.floor(height * heightPercentage)
+        width: width,
+        height: height
       };
     }
 
-    this.stats.graph.element.innerHTML = '';
+    this.graph.innerHTML = '';
 
     for (let e = 0; e < this.parameters.entries.length; e++) {
       const entry = this.parameters.entries[e];
@@ -231,18 +224,18 @@ class Graph {
       bar.style.width = proportions.width + 'px';
       bar.style.height = proportions.height + 'px';
 
-      this.stats.graph.element.appendChild(bar);
+      this.graph.appendChild(bar);
     }
 
-    if (this.mode === 'horizontal') this.stats.graph.element.classList.add('horizontal');
+    if (this.mode === 'horizontal') this.graph.classList.add('horizontal');
   }
 
   resizeRender () {
-    const graphWidth = this.stats.graph.element.offsetWidth;
-    const graphHeight = this.stats.graph.element.offsetHeight;
+    const graphWidth = this.graph.offsetWidth;
+    const graphHeight = this.graph.offsetHeight;
 
     const entries = this.parameters.entries;
-    const bars = this.stats.graph.element.querySelectorAll('.bar');
+    const bars = this.graph.querySelectorAll('.bar');
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
       const bar = bars[i];
