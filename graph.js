@@ -155,7 +155,7 @@ class Graph {
         const value = x * axis.iterations.value;
 
         const label = document.createElement('p');
-        label.innerText = (x > 0 && x < (count - 1)) ? value.toFixed(1):((x === 0) ? 0:axis.total);
+        label.innerText = (x > 0 && x < (count - 1)) ? value.toFixed(1).replace(/([0-9]+(\.[0-9]+[1-9])?)(\.?0+$)/,'$1'):((x === 0) ? 0:axis.total);
 
         if (x > 0 && x < (count - 1)) {
           if (axis.id === 'x') {
@@ -188,12 +188,16 @@ class Graph {
       color = this.colors[ Math.floor( Math.random() * this.colors.length ) ];
     }
 
-    this.renderedColors.push(color)
+    this.renderedColors.push(color);
     return color;
   }
 
   renderEntries () {
     this.graph.innerHTML = '';
+    if (this.mode === 'horizontal') this.graph.classList.add('horizontal');
+
+    const graphWidth = this.graph.offsetWidth;
+    const graphHeight = this.graph.offsetHeight;
 
     function hexToRgb (hex) {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -202,8 +206,6 @@ class Graph {
 
     for (let e = 0; e < this.parameters.entries.length; e++) {
       const entry = this.parameters.entries[e];
-      const graphWidth = this.graph.offsetWidth;
-      const graphHeight = this.graph.offsetHeight;
 
       const width = (entry.x / this.axies.x.total) * (graphWidth - ((this.mode === 'vertical') ? (2 + (this.parameters.entries.length * 2)):0));
       const height = (entry.y / this.axies.y.total) * (graphHeight - ((this.mode === 'horizontal') ? (2 + (this.parameters.entries.length * 2)):0));
@@ -218,8 +220,6 @@ class Graph {
 
       this.graph.appendChild(bar);
     }
-
-    if (this.mode === 'horizontal') this.graph.classList.add('horizontal');
   }
 
   resizeRender () {
