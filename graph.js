@@ -3,11 +3,13 @@ class Graph {
   constructor (container, parameters) {
     this.container = container;
     this.parameters = parameters;
+    this.mode = parameters.mode || 'vertical';
     this.axies = {
       x: {},
       y: {}
     };
-    this.mode = parameters.mode || 'vertical';
+    this.colors = [ '1abc9c', '2ecc71', '3498db', '9b59b6', '34495e', 'f1c40f', 'e67e22', 'e74c3c' ];
+    this.renderedColors = [];
 
     document.addEventListener('DOMContentLoaded', () => {
       this.defineContainer();
@@ -178,32 +180,41 @@ class Graph {
     if (axis !== 'x') render(this.axies.y);
   }
 
-  renderEntries () {
+  randomizeColor () {
+    const lastColor = (this.renderedColors.length) ? this.renderedColors[this.renderedColors.length-1]:'';
+    let color = this.colors[ Math.floor( Math.random() * this.colors.length ) ];
 
-    function calculateEntryProportions (entry) {
+    while (color === lastColor) {
+      color = this.colors[ Math.floor( Math.random() * this.colors.length ) ];
+    }
+
+    this.renderedColors.push(color)
+    return color;
+  }
+
+  renderEntries () {
+    this.graph.innerHTML = '';
+
+    function hexToRgb (hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return parseInt(result[1], 16)+', '+parseInt(result[2], 16)+', '+parseInt(result[3], 16);
+    }
+
+    for (let e = 0; e < this.parameters.entries.length; e++) {
+      const entry = this.parameters.entries[e];
       const graphWidth = this.graph.offsetWidth;
       const graphHeight = this.graph.offsetHeight;
 
       const width = (entry.x / this.axies.x.total) * (graphWidth - ((this.mode === 'vertical') ? (2 + (this.parameters.entries.length * 2)):0));
       const height = (entry.y / this.axies.y.total) * (graphHeight - ((this.mode === 'horizontal') ? (2 + (this.parameters.entries.length * 2)):0));
-
-      // Return width and height calculations
-      return {
-        width: width,
-        height: height
-      };
-    }
-
-    this.graph.innerHTML = '';
-
-    for (let e = 0; e < this.parameters.entries.length; e++) {
-      const entry = this.parameters.entries[e];
-      const proportions = calculateEntryProportions.bind(this)(entry, this.stats, this.parameters.entries.length);
+      const color = entry.color || this.randomizeColor();
 
       const bar = document.createElement('div');
       bar.classList.add('bar');
-      bar.style.width = proportions.width + 'px';
-      bar.style.height = proportions.height + 'px';
+      bar.style.width = width + 'px';
+      bar.style.height = height + 'px';
+      bar.style.backgroundColor = 'rgba('+hexToRgb(color)+', 0.3)';
+      bar.style.borderColor = '#' + color;
 
       this.graph.appendChild(bar);
     }

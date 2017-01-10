@@ -44,11 +44,14 @@
 }
 
 .graphContainer .graphWrapper .graph .bar {
-  border-left: 1px solid #aaa;
-  border-top: 1px solid #aaa;
-  border-right: 1px solid #aaa;
-  background: #eee;
+  border-left: 1px solid;
+  border-top: 1px solid;
+  border-right: 1px solid;
+  border-color: #aaa;
+  background-color: #eee;
   margin: 0 1px;
+
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .graphContainer .graphWrapper .graph.horizontal .bar {
