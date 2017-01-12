@@ -1,8 +1,9 @@
-class Graph {
+class Chart {
 
   constructor (container, parameters) {
     this.container = container;
     this.parameters = parameters;
+    this.parameters.spacing = this.parameters.spacing || 0;
     this.mode = parameters.mode || 'vertical';
     this.axies = {
       x: {},
@@ -13,9 +14,9 @@ class Graph {
 
     document.addEventListener('DOMContentLoaded', () => {
       this.defineContainer();
-      this.buildGraphElements();
+      this.buildChartElements();
       this.calculateAxies();
-      this.renderAxisLabels();
+      if (this.parameters.labels) this.renderAxisLabels();
       this.renderIterations();
       this.renderEntries();
 
@@ -27,10 +28,10 @@ class Graph {
 
   defineContainer () {
     this.container = document.querySelector(this.container);
-    if (!this.container.classList.contains('graphContainer')) this.container.classList.add('graphContainer');
+    if (!this.container.classList.contains('chartContainer')) this.container.classList.add('chartContainer');
   }
 
-  buildGraphElements () {
+  buildChartElements () {
     // Builds both axis elements with required child elements.
     function buildAxisElements (container) {
       // X-Axis build
@@ -81,22 +82,22 @@ class Graph {
       container.appendChild(xAxis);
     }
 
-    function buildGraph (container) {
+    function buildChart (container) {
       const wrapper = document.createElement('div');
-      wrapper.classList.add('graphWrapper');
+      wrapper.classList.add('chartWrapper');
 
-      const graph = document.createElement('div');
-      graph.classList.add('graph');
+      const chart = document.createElement('div');
+      chart.classList.add('chart');
 
-      wrapper.appendChild(graph);
+      wrapper.appendChild(chart);
       container.appendChild(wrapper);
     }
 
     this.container.innerHTML = '';
 
     buildAxisElements(this.container);
-    buildGraph(this.container);
-    this.graph = this.container.querySelector('.graph');
+    buildChart(this.container);
+    this.chart = this.container.querySelector('.chart');
   }
 
   calculateAxies () {
@@ -117,7 +118,7 @@ class Graph {
           value: 0
         },
         element: this.container.querySelector('.axis.'+axis),
-        label: this.parameters.labels[axis],
+        label: (this.parameters.labels) ? this.parameters.labels[axis]:'',
         max: 0,
         total: 0
       };
@@ -193,11 +194,11 @@ class Graph {
   }
 
   renderEntries () {
-    this.graph.innerHTML = '';
-    if (this.mode === 'horizontal') this.graph.classList.add('horizontal');
+    this.chart.innerHTML = '';
+    if (this.mode === 'horizontal') this.chart.classList.add('horizontal');
 
-    const graphWidth = this.graph.offsetWidth;
-    const graphHeight = this.graph.offsetHeight;
+    const chartWidth = this.chart.offsetWidth;
+    const chartHeight = this.chart.offsetHeight;
 
     function hexToRgb (hex) {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -207,9 +208,10 @@ class Graph {
     for (let e = 0; e < this.parameters.entries.length; e++) {
       const entry = this.parameters.entries[e];
 
-      const width = (entry.x / this.axies.x.total) * (graphWidth - ((this.mode === 'vertical') ? (2 + (this.parameters.entries.length * 2)):0));
-      const height = (entry.y / this.axies.y.total) * (graphHeight - ((this.mode === 'horizontal') ? (2 + (this.parameters.entries.length * 2)):0));
+      const width = (entry.x / this.axies.x.total) * (chartWidth - ((this.mode === 'vertical') ? (this.parameters.spacing + (this.parameters.entries.length * this.parameters.spacing)):0));
+      const height = (entry.y / this.axies.y.total) * (chartHeight - ((this.mode === 'horizontal') ? (2 + (this.parameters.entries.length * 2)):0));
       const color = entry.color || this.randomizeColor();
+      const margin = (this.mode === 'vertical') ? '0px ' + (this.parameters.spacing / 2) + 'px': (this.parameters.spacing / 2) + 'px 0px';
 
       const bar = document.createElement('div');
       bar.classList.add('bar');
@@ -217,23 +219,24 @@ class Graph {
       bar.style.height = height + 'px';
       bar.style.backgroundColor = 'rgba('+hexToRgb(color)+', 0.3)';
       bar.style.borderColor = '#' + color;
+      bar.style.margin = margin;
 
-      this.graph.appendChild(bar);
+      this.chart.appendChild(bar);
     }
   }
 
   resizeRender () {
-    const graphWidth = this.graph.offsetWidth;
-    const graphHeight = this.graph.offsetHeight;
+    const chartWidth = this.chart.offsetWidth;
+    const chartHeight = this.chart.offsetHeight;
 
     const entries = this.parameters.entries;
-    const bars = this.graph.querySelectorAll('.bar');
+    const bars = this.chart.querySelectorAll('.bar');
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
       const bar = bars[i];
 
-      const width = (entry.x / this.axies.x.total) * (graphWidth - ((this.mode === 'vertical') ? (2 + (entries.length * 2)):0));
-      const height = (entry.y / this.axies.y.total) * (graphHeight - ((this.mode === 'horizontal') ? (2 + (entries.length * 2)):0));
+      const width = (entry.x / this.axies.x.total) * (chartWidth - ((this.mode === 'vertical') ? (this.parameters.spacing + (entries.length * this.parameters.spacing)):0));
+      const height = (entry.y / this.axies.y.total) * (chartHeight - ((this.mode === 'horizontal') ? (2 + (entries.length * 2)):0));
 
       bar.style.width = width + 'px';
       bar.style.height = height + 'px';

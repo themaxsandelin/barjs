@@ -2,10 +2,10 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Graph.js by Max Sandelin</title>
+    <title>Chart.js by Max Sandelin</title>
 
-    <link rel="stylesheet" href="graph.css">
-    <script src="graph.js"></script>
+    <link rel="stylesheet" href="chart.css">
+    <script src="chart.js"></script>
 
     <style>
         body, html {
@@ -20,8 +20,9 @@
         }
     </style>
     <script type="text/javascript">
-    var params = {
-        iterations: 4,
+    const params = {
+        mode: 'vertical',
+        iterations: 10,
         labels: {
             x: 'Weight',
             y: 'Height'
@@ -60,18 +61,18 @@
                 y: 190
             },
             {
-                x: 78,
+                x: 72,
                 y: 183
             }
         ]
     };
 
-    var graph = new Graph('#graph', params);
+    const chart = new Chart('#chart', params);
     </script>
 </head>
 <body>
 
-    <div id="graph" style="width: 100%; max-width: 800px; height: 500px;"></div>
+    <div id="chart" style="width: 100%; max-width: 800px; height: 500px;"></div>
 
 </body>
 </html>
