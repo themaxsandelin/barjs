@@ -332,6 +332,8 @@ class Chart {
     const chartWidth = this.chart.offsetWidth;
     const chartHeight = this.chart.offsetHeight;
 
+    let totalBarWidth = 0;
+
     function hexToRgb (hex) {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return parseInt(result[1], 16)+', '+parseInt(result[2], 16)+', '+parseInt(result[3], 16);
@@ -353,6 +355,8 @@ class Chart {
       bar.style.borderColor = '#' + color;
       bar.style.margin = margin;
 
+      totalBarWidth += proportions.width;
+
       if (this.stats.extraSize > 0) {
         if (!entry.negative) {
           if (this.mode === 'vertical') {
@@ -372,6 +376,7 @@ class Chart {
 
       this.chart.appendChild(bar);
     }
+    console.log(chartWidth, totalBarWidth);
   }
 
   resizeRender () {
