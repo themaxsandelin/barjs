@@ -4,201 +4,168 @@
   General, container and wrapper CSS
 -------------------- */
 
-.chartContainer,
-.chartContainer * {
-  box-sizing: border-box;
+.chartWrapper, .chartWrapper * {
   font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  box-sizing: border-box;
 }
 
-.chartContainer {
-  padding: 20px 0 40px 60px;
-  position: relative;
-}
-
-.chartContainer .chartWrapper {
+.chartWrapper {
   width: 100%;
   height: 100%;
   position: relative;
-  z-index: 3;
+}
+
+.chartWrapper.titleY {
+  padding-top: 20px;
+}
+
+.chartWrapper.labelsY {
+  padding-left: 60px;
+}
+
+.chartWrapper.titleX,
+.chartWrapper.labelsX {
+  padding-bottom: 20px;
+}
+
+.chartWrapper.titleX.labelsX {
+  padding-bottom: 40px;
+}
+
+.chartWrapper .chart {
+  width: 100%;
+  height: 100%;
   border: 1px solid #aaa;
-}
-
-/* --------------------
-  Chart CSS
--------------------- */
-
-.chartContainer .chartWrapper .chart {
-  width: 100%;
-  height: 100%;
   position: relative;
-
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: flex-end;
-}
-
-.chartContainer .chartWrapper .chart.horizontal {
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.chartContainer .chartWrapper .chart .bar {
-  border-left: 1px solid;
-  border-top: 1px solid;
-  border-right: 1px solid;
-  border-color: #aaa;
-  background-color: #eee;
-
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.chartContainer .chartWrapper .chart.horizontal .bar {
-  border-left: 0px;
-  border-bottom: 1px solid #aaa;
-}
-
-.chartContainer .chartWrapper .chart .bar.negative {
-  border-top: 0px;
-  border-bottom: 1px solid;
-}
-
-.chartContainer .chartWrapper .chart.horizontal .bar.negative {
-  border-top: 1px solid;
-  border-right: 0px;
-  border-left: 1px solid;
+  z-index: 2;
 }
 
 /* --------------------
-  Axis CSS
+  Axis title CSS
 -------------------- */
 
-.chartContainer .axis {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-  padding: 21px 1px 41px 61px;
-}
-
-.chartContainer .axis .label {
+.chartWrapper .title {
   width: 100%;
   height: 20px;
-  padding: 0 0 0 60px;
-
+  line-height: 20px;
   font-size: 12px;
   font-weight: 700;
-  color: #212121;
+  position: absolute;
+  left: 0;
+  z-index: 1;
+  display: none;
 }
 
-.chartContainer .axis .iterations .inner {
+.chartWrapper .title.y {
+  top: 0;
+}
+
+.chartWrapper.titleY .title.y {
+  display: block;
+}
+
+.chartWrapper.labelsY .title.y {
+  padding-left: 60px;
+}
+
+.chartWrapper .title.x {
+  bottom: 0;
+  text-align: right;
+}
+
+.chartWrapper.titleX .title.x {
+  display: block;
+}
+
+/* --------------------
+  Axis labels CSS
+-------------------- */
+
+.chartWrapper .axis {
+  position: absolute;
+  left: 0;
+}
+
+.chartWrapper .axis .inner {
   width: 100%;
   height: 100%;
   position: relative;
 }
 
-.chartContainer .axis .iterations .inner p {
-  width: 100px;
+.chartWrapper .axis .label {
   font-size: 12px;
   line-height: 12px;
-  text-align: center;
   color: #848484;
   position: absolute;
-  padding: 0;
-  margin: 0;
 }
 
-.chartContainer .axis .label,
-.chartContainer .axis .iterations {
-  position: absolute;
-  left: 0;
-}
-
-.chartContainer .axis .lines {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
-.chartContainer .axis .lines .line {
-  background: #eee;
-  position: absolute;
-}
-
-.chartContainer .axis .lines .line.origo {
-  background: #aaa;
-  z-index: 3;
-}
-
-.chartContainer .axis.x .label {
-  bottom: 0;
-  text-align: right;
-}
-
-.chartContainer .axis.x .iterations {
+.chartWrapper .axis.x {
   width: 100%;
   height: 20px;
+  bottom: 0px;
+}
+
+.chartWrapper.titleX .axis.x {
   bottom: 20px;
-  padding: 0 0 0 60px;
 }
 
-.chartContainer .axis.x .iterations .inner p {
+.chartWrapper.labelsY .axis.x {
+  padding-left: 60px;
+}
+
+.chartWrapper .axis.x .label {
+  width: 100px;
+  text-align: center;
+  margin-right: -50px;
   top: 5px;
-  margin: 0 -50px 0 0;
 }
 
-.chartContainer .axis.x .iterations .inner p:first-child {
-  text-align: left;
-  left: 0px;
-  margin: 0;
-}
-
-.chartContainer .axis.x .iterations .inner p:last-child {
+.chartWrapper .axis.x .label.max {
   text-align: right;
+  margin-right: 0px;
   right: 0;
-  left: auto;
-  margin: 0;
 }
 
-.chartContainer .axis.x .lines .line {
-  width: 1px;
-  height: 100%;
-  top: 0;
+.chartWrapper .axis.x .label.min {
+  text-align: left;
+  margin-right: 0px;
+  left: 0;
 }
 
-.chartContainer .axis.y .label,
-.chartContainer .axis.y .iterations {
-  top: 0;
-}
-
-.chartContainer .axis.y .iterations {
+.chartWrapper .axis.y {
   width: 60px;
   height: 100%;
-  padding: 20px 0 40px 0;
-}
-
-.chartContainer .axis.y .iterations .inner p {
-  right: 5px;
-  margin: -6px 0 0 0;
-  text-align: right;
-}
-
-.chartContainer .axis.y .iterations .inner p:first-child {
   bottom: 0;
-  top: auto;
-  margin: 0;
 }
 
-.chartContainer .axis.y .iterations .inner p:last-child {
-  top: 0;
-  bottom: auto;
-  margin: 0;
+.chartWrapper.titleY .axis.y {
+  padding-top: 20px;
 }
 
-.chartContainer .axis.y .lines .line {
+.chartWrapper.titleX .axis.y,
+.chartWrapper.labelsX .axis.y {
+  padding-bottom: 20px;
+}
+
+.chartWrapper.labelsX.titleX .axis.y {
+  padding-bottom: 40px;
+}
+
+.chartWrapper .axis.y .label {
   width: 100%;
-  height: 1px;
-  left: 0;
+  text-align: right;
+  padding-right: 5px;
+  position: absolute;
+  right: 0;
+  margin-top: -6px;
+}
+
+.chartWrapper .axis.y .label.max {
+  top: 0;
+  margin-top: 0px;
+}
+
+.chartWrapper .axis.y .label.min {
+  bottom: 0;
+  margin-top: 0;
 }

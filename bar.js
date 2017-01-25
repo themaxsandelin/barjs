@@ -1,289 +1,230 @@
 class Chart {
 
-  constructor (container, parameters) {
-    this.parameters = parameters;
-
-    this.container = container;
-    this.labels = parameters.labels || [];
-    this.spacing = parameters.spacing || 0;
-    this.mode = parameters.mode || 'vertical';
+  constructor (selector, parameters) {
     this.data = parameters.data || [];
-    this.stats = {};
-    this.axies = {
-      x: {},
-      y: {}
-    };
+    this.orientation = parameters.orientation || 'vertical';
+    this.titles = parameters.titles || [];
+
+    this.iterations = parameters.iterations || 0;
+    this.spacing = parameters.spacing || 0;
+
+    this.hideLines = parameters.hideLines || false;
+    this.hideLabels = parameters.hideLabels || false;
+    this.hideTitles = parameters.hideTitles || !this.titles.length;
+    this.responsive = (parameters.responsive === false || parameters.responsive === true) ? parameters.responsive:true;
+
     this.colors = [ '1abc9c', '2ecc71', '3498db', '9b59b6', '34495e', 'f1c40f', 'e67e22', 'e74c3c' ];
     this.renderedColors = [];
 
+    this.calculateStats();
     document.addEventListener('DOMContentLoaded', () => {
-      this.defineContainer();
-      this.buildChartElements();
+      this.defineContainer(selector);
+      this.buildGraph();
+      this.renderTitles();
+      this.renderIterations();
+      this.renderData(this.data);
 
-      this.calculateStats();
-      this.calculateAxies();
-
-      // this.renderAxisLabels();
-      this.renderIterations('x');
-      this.renderIterations('y');
-      this.renderData();
-
+      if (!this.responsive) return;
       window.addEventListener('resize', () => {
-        this.resizeRender();
+        this.resizeData();
       });
     });
   }
 
-  defineContainer () {
-    this.container = document.querySelector(this.container);
-    if (!this.container.classList.contains('chartContainer')) this.container.classList.add('chartContainer');
-  }
-
-  buildChartElements () {
-    // Builds both axis elements with required child elements.
-    function buildAxisElements (container) {
-      // X-Axis build
-      const xAxis = document.createElement('div');
-      xAxis.classList.add('axis');
-      xAxis.classList.add('x');
-
-      const xLabel = document.createElement('div');
-      xLabel.classList.add('label');
-      xAxis.appendChild(xLabel);
-
-      const xIterations = document.createElement('div');
-      xIterations.classList.add('iterations');
-
-      const xIterationsInner = document.createElement('div');
-      xIterationsInner.classList.add('inner');
-      xIterations.appendChild(xIterationsInner);
-
-      const xLines = document.createElement('div');
-      xLines.classList.add('lines');
-
-      xAxis.appendChild(xLines);
-      xAxis.appendChild(xIterations);
-
-      // Y-Axis build
-      const yAxis = document.createElement('div');
-      yAxis.classList.add('axis');
-      yAxis.classList.add('y');
-
-      const yLabel = document.createElement('div');
-      yLabel.classList.add('label');
-      yAxis.appendChild(yLabel);
-
-      const yIterations = document.createElement('div');
-      yIterations.classList.add('iterations');
-
-      const yIterationsInner = document.createElement('div');
-      yIterationsInner.classList.add('inner');
-      yIterations.appendChild(yIterationsInner);
-
-      const yLines = document.createElement('div');
-      yLines.classList.add('lines');
-
-      yAxis.appendChild(yLines);
-      yAxis.appendChild(yIterations);
-
-      container.appendChild(yAxis);
-      container.appendChild(xAxis);
-    }
-
-    function buildChart (container) {
-      const wrapper = document.createElement('div');
-      wrapper.classList.add('chartWrapper');
-
-      const chart = document.createElement('div');
-      chart.classList.add('chart');
-
-      wrapper.appendChild(chart);
-      container.appendChild(wrapper);
-    }
-
-    this.container.innerHTML = '';
-
-    buildAxisElements(this.container);
-    buildChart(this.container);
-  }
-
   calculateStats () {
-    this.chart = this.container.querySelector('.chart');
-    const mainAxis = (this.mode === 'vertical') ? 'y':'x';
-    const width = this.chart.offsetWidth;
-    const height = this.chart.offsetHeight;
-
-    let max = 0;
-    let min = 0;
-    for (let i = 0; i < this.data.length; i++) {
-      if (this.data[i][mainAxis] < 0) this.data[i].negative = true;
-
-      if (max < this.data[i][mainAxis]) max = this.data[i][mainAxis];
-      if (min > this.data[i][mainAxis]) min = this.data[i][mainAxis];
-    }
-
-    let mainSize = (max / (max + (min * -1))) * ((mainAxis === 'y') ? height:width);
-    let extraSize = ((min * -1) / (max + (min * -1))) * ((mainAxis === 'y') ? height:width);
-
-    if (extraSize > 0) {
-      mainSize -= 1;
-    }
-
-    this.stats = {
-      width: width,
-      height: height,
-      mainSize: mainSize,
-      extraSize: extraSize,
-      mainAxis: mainAxis,
-      mainMax: max,
-      mainMin: min
-    };
-  }
-
-  calculateAxies () {
-    for (let i = 0; i < 2; i++) {
-      const axis = (i) ? 'x':'y';
-      const data = this.data;
-      const isMainAxis = (axis === this.stats.mainAxis);
-
-      this.axies[axis] = {
-        id: axis,
-        iterations: {
-          count: 0,
-          size: 0,
-          value: 0
-        },
-        element: this.container.querySelector('.axis.'+axis),
-        label: (this.labels) ? this.labels[axis]:'',
+    const axies = {
+      x: {
         max: 0,
-        min: 0,
         total: 0,
-        mainTotal: 0,
-        extraTotal: 0
-      };
+        min: 0
+      },
+      y: {
+        max: 0,
+        total: 0,
+        min: 0
+      }
+    };
 
-      for (let e = 0; e < data.length; e++) {
-        if (data[e].invalid) return;
+    let valueType = '';
+    for (let i = 0; i < this.data.length; i++) {
+      let value = this.data[i];
+      let type = typeof value;
 
-        // Negative values should only be supported when the axis is the same as the mode
-        // - Negative Y value only works when Mode is Vertical
-        // - Negative X Value only works when Mode is Hortizontal
-        if (!isMainAxis && data[e][axis] < 0) {
-          data[e].invalid = true;
-          return;
+      if (type === 'string') {
+        value = parseFloat(value);
+        type = typeof value;
+      }
+
+      if (typeof value.concat === 'function') {
+        value = {
+          x: value[0],
+          y: value[1]
+        };
+      }
+
+      if (type === 'object' && value.value) type = 'number';
+
+      if (!valueType) valueType = type;
+
+      if (valueType !== type) {
+        throw new Error('All values have to be of the same type.');
+      }
+      if (type === 'array' && value.length !== 2) {
+        throw new Error('The array length has to be 2 to account for both axies (x, y).');
+      }
+      if (this.orientation === 'vertical' && type === 'object' && value.x < 0) {
+        throw new Error('You cannot have a negative X value in a vertical graph.');
+      }
+      if (this.orientation === 'horizontal' && type === 'object' && value.y < 0) {
+        throw new Error('You cannot have a negative Y value in a horizontal graph.');
+      }
+
+      this.singleAxis = (type === 'number');
+      this.mainAxis = (this.orientation === 'vertical') ? 'y':'x';
+
+      if (!this.singleAxis && this.titles.length && this.titles.length !== 2) {
+        throw new Error('Since you supplied data for both axies you also need to supply either titles for both axies or exclude titles all together.');
+      }
+
+      function pushValueToAxis (value, a) {
+        if (value.value) value = value.value;
+
+        if (value >= 0) {
+          axies[a].total += value;
+          if (axies[a].max < value) axies[a].max = value;
+        } else if (value < 0 && axies[a].min > value) {
+          axies[a].min = value;
         }
-
-        if (this.axies[axis].max < data[e][axis]) this.axies[axis].max = data[e][axis];
-        if (isMainAxis && this.axies[axis].min > data[e][axis]) this.axies[axis].min = data[e][axis];
-
-        if (!isMainAxis && data[e][axis] >= 0) this.axies[axis].total += data[e][axis];
-        if (!isMainAxis && data[e][axis] >= 0) this.axies[axis].mainTotal += data[e][axis];
       }
 
-      if (isMainAxis) this.axies[axis].total = this.axies[axis].max;
-      if (isMainAxis) {
-        this.axies[axis].mainTotal = this.axies[axis].max;
-        this.axies[axis].extraTotal = this.axies[axis].min * -1;
+      if (type === 'number') {
+        pushValueToAxis(value, (this.orientation === 'vertical') ? 'y':'x');
+      } else {
+        for (let v = 0; v < 2; v++) {
+          const a = (v) ? 'x':'y';
+          pushValueToAxis(value[a], a);
+        }
       }
 
-      if (this.parameters.iterations) {
-        const count = (this.parameters.iterations[axis]) ? this.parameters.iterations[axis]:this.parameters.iterations;
-
-        this.axies[axis].iterations.count = count;
-        this.axies[axis].iterations.size = 100 / (count + 1);
-        this.axies[axis].iterations.value = parseFloat(this.axies[axis].max / (count + 1).toFixed(1));
-      }
+      this.data[i] = value;
     }
+
+    if (this.orientation === 'vertical') {
+      // Y is main axis
+      const iterations = (typeof this.iterations === 'object') ? this.iterations.y:this.iterations;
+      const totalValues = (axies.y.min * -1) + axies.y.max;
+      axies.y.maxShare = (axies.y.min < 0) ? (axies.y.max / totalValues):1;
+      axies.y.minShare = (axies.y.min < 0) ? ((axies.y.min * -1) / totalValues):0;
+      axies.y.extraIterations = Math.floor((axies.y.minShare * 100) / ((axies.y.maxShare * 100) / (iterations + 1)));
+    } else {
+      // X is main axis
+      const iterations = (typeof this.iterations === 'object') ? this.iterations.x:this.iterations;
+      const totalValues = (axies.x.min * -1) + axies.x.max;
+      axies.x.maxShare = (axies.x.min < 0) ? (axies.x.max / totalValues):1;
+      axies.x.minShare = (axies.x.min < 0) ? ((axies.x.min * -1) / totalValues):0;
+      axies.x.extraIterations = Math.floor((axies.x.minShare * 100) / ((axies.x.maxShare * 100) / (iterations + 1)));
+    }
+
+    this.axies = axies;
   }
 
-  renderAxisLabels () {
-    if (!this.labels) return;
-
-    const axies = [ 'x', 'y' ];
-    for (let i = 0; i < 2; i++) {
-      this.axies[axies[i]].element.querySelector('.label').innerText = this.axies[axies[i]].label;
-    }
+  defineContainer (selector) {
+    this.container = (selector.nodeType) ? selector:document.querySelector(selector);
   }
 
-  renderIterations (axisChar) {
-    const axis = this.axies[axisChar];
-    const lines = axis.element.querySelector('.lines');
-    const iterations = axis.element.querySelector('.iterations .inner');
+  buildGraph (callback) {
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('chartWrapper');
 
-    // Render the axis label, if specified
-    if (axis.label) axis.element.querySelector('.label').innerText = axis.label;
+    const axisX = document.createElement('div');
+    axisX.classList.add('axis');
+    axisX.classList.add('x');
 
-    // Render out the first value of the axis (minimum value)
-    const firstValue = document.createElement('p');
-    firstValue.innerText = axis.min.toFixed(1).replace(/([0-9]+(\.[0-9]+[1-9])?)(\.?0+$)/,'$1');
-    iterations.appendChild(firstValue);
+    const innerAxisX = document.createElement('div');
+    innerAxisX.classList.add('inner');
 
-    // Calculate the percentage size of each iteration
-    let iterationPercentage = (1 / (axis.iterations.count + 1));
-    let extra = 0;
-    if (axisChar === this.stats.mainAxis) {
-      iterationPercentage = (iterationPercentage * this.stats.mainSize) / (this.stats.mainAxis === 'y' ? this.stats.height:this.stats.width);
-      const iterationSize = (axisChar === 'y' ? this.stats.height:this.stats.width) * iterationPercentage;
-      extra = Math.floor(this.stats.extraSize / iterationSize);
-    }
+    axisX.appendChild(innerAxisX);
 
-    // Render regular iterations (on positive side of mainAxis as well)
-    for (let i = 0; i < axis.iterations.count; i++) {
-      const line = document.createElement('div');
-      const term = (axisChar === 'y') ? 'top':'right';
-      const move = ((iterationPercentage * 100) * (i + 1));
+    const axisY = document.createElement('div');
+    axisY.classList.add('axis');
+    axisY.classList.add('y');
 
-      line.classList.add('line');
-      line.style[term] = move + '%';
-      lines.appendChild(line);
+    const innerAxisY = document.createElement('div');
+    innerAxisY.classList.add('inner');
 
-      const value = axis.iterations.value * (axis.iterations.count - (i));
-      const label = document.createElement('p');
-      label.innerText = value.toFixed(1).replace(/([0-9]+(\.[0-9]+[1-9])?)(\.?0+$)/,'$1');
-      label.style[term] = move + '%';
-      iterations.appendChild(label);
-    }
+    axisY.appendChild(innerAxisY);
 
-    // Render extra iterations (on the mainAxis only)
-    if (axisChar === this.stats.mainAxis) {
-      for (let j = 0; j < extra; j++) {
-        const count = axis.iterations.count + 1 + (j+1);
+    const titleX = document.createElement('div');
+    titleX.classList.add('title');
+    titleX.classList.add('x');
 
-        const line = document.createElement('div');
-        const term = (axisChar === 'y') ? 'top':'right';
-        const move = ((iterationPercentage * 100) * count);
-        line.classList.add('line');
-        line.style[term] = move + '%';
-        lines.appendChild(line);
+    const titleY = document.createElement('div');
+    titleY.classList.add('title');
+    titleY.classList.add('y');
 
-        const label = document.createElement('p');
-        const value = 0 - axis.iterations.value * (j + 1);
-        label.innerText = value;
-        label.style[term] = move + '%';
-        iterations.appendChild(label);
+    const chart = document.createElement('div');
+    chart.classList.add('chart');
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+
+    chart.appendChild(svg);
+    wrapper.appendChild(axisX);
+    wrapper.appendChild(axisY);
+    wrapper.appendChild(titleX);
+    wrapper.appendChild(titleY);
+    wrapper.appendChild(chart);
+    this.container.appendChild(wrapper);
+
+    this.wrapper = wrapper;
+    this.chart = chart;
+    this.svg = svg;
+  }
+
+  calculateBarProportions (value) {
+    const type = typeof value;
+    let val = 0;
+
+    const chartWidth = this.chart.clientWidth - ((this.orientation === 'vertical') ? (this.spacing * (this.data.length + 1)):0);
+    const chartHeight = this.chart.clientHeight - ((this.orientation === 'horizontal') ? (this.spacing * (this.data.length + 1)):0);
+
+    let width = 0;
+    val = (type === 'object') ? value.x:value;
+    if (this.orientation === 'vertical') {
+      if (type === 'object') {
+        width = (val / this.axies.x.total) * chartWidth;
+      } else {
+        width = chartWidth / this.data.length;
+      }
+    } else {
+      if (val < 0) {
+        width = ((val * -1) / (this.axies.x.min * -1)) * (chartWidth * this.axies.x.minShare);
+      } else {
+        width = (val / this.axies.x.max) * (chartWidth * this.axies.x.maxShare);
       }
     }
 
-    // If there is a negative value, render origo (0) first
-    if (this.stats.mainAxis === axisChar && this.stats.extraSize > 0) {
-      const term = (this.mode === 'vertical') ? 'top':'right';
-      const move = ((iterationPercentage * 100) * (axis.iterations.count + 1));
-      const origo = document.createElement('div');
-      origo.classList.add('line');
-      origo.classList.add('origo');
-      origo.style[term] = move + '%';
-      lines.appendChild(origo);
-
-      const origoLabel = document.createElement('p');
-      origoLabel.innerText = 0;
-      origoLabel.style[term] = move + '%';
-      iterations.appendChild(origoLabel);
+    let height = 0;
+    val = (type === 'object') ? value.y:value;
+    if (this.orientation == 'vertical') {
+      if (val < 0) {
+        height = ((val * -1) / (this.axies.y.min * -1)) * (chartHeight * this.axies.y.minShare);
+      } else {
+        height = (val / this.axies.y.max) * (chartHeight * this.axies.y.maxShare);
+      }
+    } else {
+      if (type === 'object') {
+        height = (val / this.axies.y.total) * chartHeight;
+      } else {
+        height = chartHeight / this.data.length;
+      }
     }
 
-    // Render out the last iteration label (maximum / total value)
-    const lastValue = document.createElement('p');
-    lastValue.innerText = axis.max.toFixed(1).replace(/([0-9]+(\.[0-9]+[1-9])?)(\.?0+$)/,'$1');
-    iterations.appendChild(lastValue);
+    return {
+      width: width,
+      height: height
+    };
   }
 
   randomizeColor () {
@@ -298,130 +239,252 @@ class Chart {
     return color;
   }
 
-  calculateEntryProportions (entry) {
-    let width = 0;
-    let height = 0;
-    let difference = this.data.length * this.spacing;
+  renderTitles () {
+    if (this.hideTitles) return;
 
-    if (this.stats.mainAxis === 'y') {
-      width = (entry.x / this.axies.x.total) * (this.stats.width - difference);
-      if (entry.negative) {
-        height = ((entry.y*-1) / this.axies.y.extraTotal) * this.stats.extraSize;
-      } else {
-        height = (entry.y / this.axies.y.mainTotal) * this.stats.mainSize;
-      }
-    } else {
-      if (entry.negative) {
-        width = ((entry.x*-1) / this.axies.x.extraTotal) * this.stats.extraSize;
-      } else {
-        width = (entry.x / this.axies.x.mainTotal) * this.stats.mainSize;
-      }
-      height = (entry.y / this.axies.y.total) * (this.stats.height - difference);
+    if (this.singleAxis) {
+      this.wrapper.classList.add('title' + this.mainAxis.toUpperCase());
+      this.wrapper.querySelector('.title.' + this.mainAxis).innerText = this.titles[0];
+      return;
     }
 
-    return {
-      width: width,
-      height: height
-    };
+    for (let i = 0; i < 2; i++) {
+      const axis = (i) ? 'x':'y';
+      const title = this.titles[i];
+
+      this.wrapper.classList.add('title' + axis.toUpperCase());
+      this.wrapper.querySelector('.title.' + axis).innerText = title;
+    }
   }
 
-  renderData () {
-    this.chart.innerHTML = '';
-    if (this.mode === 'horizontal') this.chart.classList.add('horizontal');
+  renderIterations () {
+    const mainAxis = (this.orientation === 'vertical') ? 'y':'x';
+    if (this.axies[mainAxis].min < 0) {
+      // Chart is negative, add origo.
+      const origo = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      let x = 0;
+      let y = 0;
+      if (mainAxis === 'x') {
+        x = 100 - (this.axies[mainAxis].maxShare * 100);
+        y = 0;
+      } else {
+        x = 0;
+        y = this.axies[mainAxis].maxShare * 100;
+      }
 
-    const chartWidth = this.chart.offsetWidth;
-    const chartHeight = this.chart.offsetHeight;
+      origo.setAttribute('fill', '#aaaaaa');
+      origo.setAttribute('width', (mainAxis === 'x') ? '1':'100%');
+      origo.setAttribute('height', (mainAxis === 'x') ? '100%':'1');
+      origo.setAttribute('x', x + '%');
+      origo.setAttribute('y', y + '%');
 
-    let totalBarWidth = 0;
+      this.svg.appendChild(origo);
+    }
+
+    if (!this.singleAxis) {
+      if (!this.hideLines) {
+        this.renderIterationLines('x');
+        this.renderIterationLines('y');
+      }
+      if (!this.hideLabels) {
+        this.renderIterationLabels('x');
+        this.renderIterationLabels('y');
+      }
+      return;
+    }
+
+    if (!this.hideLines) this.renderIterationLines( (this.orientation === 'vertical') ? 'y':'x' );
+    if (!this.hideLabels) this.renderIterationLabels( (this.orientation === 'vertical') ? 'y':'x' );
+  }
+
+  renderIterationLines (axis) {
+    const iterations = (typeof this.iterations === 'object') ? this.iterations[axis]:this.iterations;
+    if (!iterations) return;
+
+    const heightReference = (this.mainAxis === axis) ? (this.axies[axis].maxShare * 100):100;
+
+    const iterationPercentage = heightReference / (iterations + 1);
+    const width = (axis === 'x') ? '1':'100%';
+    const height = (axis === 'x') ? '100%':'1';
+    const extraIterations = this.axies[this.mainAxis].extraIterations;
+
+    for (let i = 0; i < iterations; i++) {
+      const move = iterationPercentage * (i + 1);
+      const x = (axis === 'x') ? 100 - move:0;
+      const y = (axis === 'x') ? 0:move;
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      line.setAttribute('fill', '#eeeeee');
+      line.setAttribute('width', width);
+      line.setAttribute('height', height);
+      line.setAttribute('x', x + '%');
+      line.setAttribute('y', y + '%');
+
+      this.svg.appendChild(line);
+    }
+
+    if (this.mainAxis !== axis) return;
+
+    for (let j = 0; j < extraIterations; j++) {
+      const move = (iterationPercentage * (j + 1)) + (this.axies[axis].maxShare * 100);
+      const x = (axis === 'x') ? 100 - move:0;
+      const y = (axis === 'x') ? 0:move;
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      line.setAttribute('fill', '#eeeeee');
+      line.setAttribute('width', width);
+      line.setAttribute('height', height);
+      line.setAttribute('x', x + '%');
+      line.setAttribute('y', y + '%');
+
+      this.svg.appendChild(line);
+    }
+  }
+
+  renderIterationLabels (axis) {
+    const iterations = (typeof this.iterations === 'object') ? this.iterations[axis]:this.iterations;
+
+    const element = this.wrapper.querySelector('.axis.' + axis + ' .inner');
+    this.wrapper.classList.add('labels' + axis.toUpperCase());
+
+    // Output MIN value and MAX value + ev. ORIGO(0) value
+    const min = document.createElement('div');
+    min.classList.add('label');
+    min.classList.add('min');
+    min.innerText = this.axies[axis].min;
+
+    const max = document.createElement('div');
+    max.classList.add('label');
+    max.classList.add('max');
+    max.innerText = this.axies[axis].max;
+
+    element.appendChild(min);
+    element.appendChild(max);
+
+    if (this.axies[axis].min < 0) {
+      const origo = document.createElement('div');
+      const style = (axis === 'x') ? 'right':'top';
+      origo.classList.add('label');
+      origo.innerText = '0';
+      origo.style[style] = this.axies[axis].maxShare * 100 + '%';
+
+      element.appendChild(origo);
+    }
+
+    if (!iterations) return;
+
+    const value = this.axies[axis].max / (iterations + 1);
+    const percentage = (((this.mainAxis === axis) ? (this.axies[axis].maxShare * 100):100) / (iterations + 1));
+
+    for (let i = 0; i < iterations; i++) {
+      const move = ((i + 1) * percentage) + '%';
+      const style = (axis === 'x') ? 'right':'top';
+      const label = document.createElement('div');
+      label.classList.add('label');
+      label.innerText = parseFloat(value * (iterations - i)).toFixed(1);
+      label.style[style] = move;
+
+      element.appendChild(label);
+    }
+
+    if (this.mainAxis === axis && this.axies[this.mainAxis].extraIterations) {
+      for (let j = 0; j < this.axies[this.mainAxis].extraIterations; j++) {
+        const move = ((this.axies[axis].maxShare * 100) + ((j + 1) * percentage)) + '%';
+        const style = (axis === 'x') ? 'right':'top';
+        const label = document.createElement('div');
+        label.classList.add('label');
+        label.innerText = parseFloat(value * (j + 1)).toFixed(1) * -1;
+        label.style[style] = move;
+
+        element.appendChild(label);
+      }
+    }
+  }
+
+  renderData (data = []) {
+    let totalWidth = 0;
+    let totalHeight = 0;
+
+    this.lastWidth = this.chart.clientWidth;
+    this.lastHeight = this.chart.clientHeight;
 
     function hexToRgb (hex) {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return parseInt(result[1], 16)+', '+parseInt(result[2], 16)+', '+parseInt(result[3], 16);
     }
 
-    for (let e = 0; e < this.data.length; e++) {
-      const entry = this.data[e];
-      if (entry.invalid) return;
+    const positive = (this.orientation === 'vertical') ? (this.lastHeight * this.axies.y.maxShare):(this.lastWidth * this.axies.x.minShare);
+    for (let i = 0; i < data.length; i++) {
+      const value = data[i].value || data[i];
+      const proportions = this.calculateBarProportions(value);
+      const color = data[i].color || this.randomizeColor();
 
-      const proportions = this.calculateEntryProportions(entry);
-      const color = entry.color || this.randomizeColor();
-      const margin = (this.mode === 'vertical') ? '0px ' + (this.spacing / 2) + 'px': (this.spacing / 2) + 'px 0px';
+      let x = 0;
+      let y = 0;
 
-      const bar = document.createElement('div');
-      bar.classList.add('bar');
-      bar.style.width = proportions.width + 'px';
-      bar.style.height = proportions.height + 'px';
-      bar.style.backgroundColor = 'rgba('+hexToRgb(color)+', 0.3)';
-      bar.style.borderColor = '#' + color;
-      bar.style.margin = margin;
-
-      totalBarWidth += proportions.width;
-
-      if (this.stats.extraSize > 0) {
-        if (!entry.negative) {
-          if (this.mode === 'vertical') {
-            bar.style.transform = 'translate3d(0px,-'+this.stats.extraSize+'px,0px)';
-          } else {
-            bar.style.transform = 'translate3d('+this.stats.extraSize+'px,0px,0px)';
-          }
-        } else {
-          bar.classList.add('negative');
-          if (this.mode === 'vertical') {
-            bar.style.transform = 'translate3d(0px,-'+(this.stats.extraSize - proportions.height)+'px,0px)';
-          } else {
-            bar.style.transform = 'translate3d('+(this.stats.extraSize - proportions.width)+'px,0px,0px)';
-          }
-        }
+      if (this.orientation === 'vertical') {
+        const val = (typeof value === 'object') ? value.y:value;
+        x = totalWidth + this.spacing;
+        y = (val < 0) ? positive:(positive - proportions.height);
+        totalWidth += (proportions.width + this.spacing);
+      } else {
+        const val = (typeof value === 'object') ? value.x:value;
+        x = (val > 0) ? positive:(positive - proportions.width);
+        y = totalHeight + this.spacing;
+        totalHeight += (proportions.height + this.spacing);
       }
 
-      this.chart.appendChild(bar);
+      const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bar.classList.add('bar');
+      bar.setAttribute('width', proportions.width);
+      bar.setAttribute('height', proportions.height);
+      bar.setAttribute('stroke-width', '1');
+      bar.setAttribute('x', x);
+      bar.setAttribute('y', y);
+      bar.style.stroke = '#' + color;
+      bar.style.fill = 'rgba('+hexToRgb(color)+', 0.3)';
+
+      this.svg.appendChild(bar);
     }
-    console.log(chartWidth, totalBarWidth);
   }
 
-  resizeRender () {
-    const width = this.chart.offsetWidth;
-    const height = this.chart.offsetHeight;
+  resizeData () {
+    const width = this.chart.clientWidth;
+    const height = this.chart.clientHeight;
+    if (width === this.lastWidth && height === this.lastHeight) return;
 
-    if (width === this.stats.width && height === this.stats.height) return;
+    this.lastWidth = width;
+    this.lastHeight = height;
 
-    this.stats.width = width;
-    this.stats.height = height;
+    const positive = (this.orientation === 'vertical') ? (height * this.axies.y.maxShare):(width * this.axies.x.minShare);
 
-    this.stats.mainSize = (this.stats.mainMax / (this.stats.mainMax + (this.stats.mainMin * -1))) * ((this.stats.mainAxis === 'y') ? this.stats.height:this.stats.width);
-    this.stats.extraSize = ((this.stats.mainMin * -1) / (this.stats.mainMax + (this.stats.mainMin * -1))) * ((this.stats.mainAxis === 'y') ? this.stats.height:this.stats.width);
-
-    if (this.stats.extraSize > 0) {
-      this.stats.mainSize -= 1;
-    }
-
-    const data = this.data;
-    const bars = this.chart.querySelectorAll('.bar');
-    for (let i = 0; i < data.length; i++) {
-      const entry = data[i];
+    let totalWidth = 0;
+    let totalHeight = 0;
+    const bars = this.svg.querySelectorAll('rect.bar');
+    for (let i = 0; i < bars.length; i++) {
+      const value = this.data[i].value || this.data[i];
       const bar = bars[i];
+      const proportions = this.calculateBarProportions(value);
 
-      const proportions = this.calculateEntryProportions(entry);
+      let x = 0;
+      let y = 0;
 
-      bar.style.width = proportions.width + 'px';
-      bar.style.height = proportions.height + 'px';
-
-      if (this.stats.extraSize > 0) {
-        if (!entry.negative) {
-          if (this.mode === 'vertical') {
-            bar.style.transform = 'translate3d(0px,-'+this.stats.extraSize+'px,0px)';
-          } else {
-            bar.style.transform = 'translate3d('+this.stats.extraSize+'px,0px,0px)';
-          }
-        } else {
-          bar.classList.add('negative');
-          if (this.mode === 'vertical') {
-            bar.style.transform = 'translate3d(0px,-'+(this.stats.extraSize - proportions.height)+'px,0px)';
-          } else {
-            bar.style.transform = 'translate3d('+(this.stats.extraSize - proportions.width)+'px,0px,0px)';
-          }
-        }
+      if (this.orientation === 'vertical') {
+        const val = (typeof value === 'object') ? value.y:value;
+        x = totalWidth + this.spacing;
+        y = (val < 0) ? positive:(positive - proportions.height);
+        totalWidth += (proportions.width + this.spacing);
+      } else {
+        const val = (typeof value === 'object') ? value.x:value;
+        x = (val > 0) ? positive:(positive - proportions.width);
+        y = totalHeight + this.spacing;
+        totalHeight += (proportions.height + this.spacing);
       }
+
+      bar.setAttribute('width', proportions.width);
+      bar.setAttribute('height', proportions.height);
+      bar.setAttribute('x', x);
+      bar.setAttribute('y', y);
     }
   }
 
