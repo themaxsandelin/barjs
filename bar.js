@@ -182,63 +182,6 @@ class Chart {
     this.svg = svg;
   }
 
-  calculateBarProportions (value) {
-    const type = typeof value;
-    let val = 0;
-
-    const chartWidth = this.chart.clientWidth - ((this.orientation === 'vertical') ? (this.spacing * (this.data.length + 1)):0);
-    const chartHeight = this.chart.clientHeight - ((this.orientation === 'horizontal') ? (this.spacing * (this.data.length + 1)):0);
-
-    let width = 0;
-    val = (type === 'object') ? value.x:value;
-    if (this.orientation === 'vertical') {
-      if (type === 'object') {
-        width = (val / this.axies.x.total) * chartWidth;
-      } else {
-        width = chartWidth / this.data.length;
-      }
-    } else {
-      if (val < 0) {
-        width = ((val * -1) / (this.axies.x.min * -1)) * (chartWidth * this.axies.x.minShare);
-      } else {
-        width = (val / this.axies.x.max) * (chartWidth * this.axies.x.maxShare);
-      }
-    }
-
-    let height = 0;
-    val = (type === 'object') ? value.y:value;
-    if (this.orientation == 'vertical') {
-      if (val < 0) {
-        height = ((val * -1) / (this.axies.y.min * -1)) * (chartHeight * this.axies.y.minShare);
-      } else {
-        height = (val / this.axies.y.max) * (chartHeight * this.axies.y.maxShare);
-      }
-    } else {
-      if (type === 'object') {
-        height = (val / this.axies.y.total) * chartHeight;
-      } else {
-        height = chartHeight / this.data.length;
-      }
-    }
-
-    return {
-      width: width,
-      height: height
-    };
-  }
-
-  randomizeColor () {
-    const lastColor = (this.renderedColors.length) ? this.renderedColors[this.renderedColors.length-1]:'';
-    let color = this.colors[ Math.floor( Math.random() * this.colors.length ) ];
-
-    while (color === lastColor) {
-      color = this.colors[ Math.floor( Math.random() * this.colors.length ) ];
-    }
-
-    this.renderedColors.push(color);
-    return color;
-  }
-
   renderTitles () {
     if (this.hideTitles) return;
 
@@ -401,6 +344,63 @@ class Chart {
     }
   }
 
+  calculateBarProportions (value) {
+    const type = typeof value;
+    let val = 0;
+
+    const chartWidth = this.chart.clientWidth - ((this.orientation === 'vertical') ? ((this.spacing * (this.data.length + 1)) + (this.data.length)):1);
+    const chartHeight = this.chart.clientHeight - ((this.orientation === 'horizontal') ? ((this.spacing * (this.data.length + 1)) + this.data.length):1);
+
+    let width = 0;
+    val = (type === 'object') ? value.x:value;
+    if (this.orientation === 'vertical') {
+      if (type === 'object') {
+        width = (val / this.axies.x.total) * chartWidth;
+      } else {
+        width = chartWidth / this.data.length;
+      }
+    } else {
+      if (val < 0) {
+        width = ((val * -1) / (this.axies.x.min * -1)) * (chartWidth * this.axies.x.minShare) - 1;
+      } else {
+        width = (val / this.axies.x.max) * (chartWidth * this.axies.x.maxShare) - 1;
+      }
+    }
+
+    let height = 0;
+    val = (type === 'object') ? value.y:value;
+    if (this.orientation == 'vertical') {
+      if (val < 0) {
+        height = ((val * -1) / (this.axies.y.min * -1)) * (chartHeight * this.axies.y.minShare) - 2;
+      } else {
+        height = (val / this.axies.y.max) * (chartHeight * this.axies.y.maxShare);
+      }
+    } else {
+      if (type === 'object') {
+        height = (val / this.axies.y.total) * chartHeight;
+      } else {
+        height = chartHeight / this.data.length;
+      }
+    }
+
+    return {
+      width: width,
+      height: height
+    };
+  }
+
+  randomizeColor () {
+    const lastColor = (this.renderedColors.length) ? this.renderedColors[this.renderedColors.length-1]:'';
+    let color = this.colors[ Math.floor( Math.random() * this.colors.length ) ];
+
+    while (color === lastColor) {
+      color = this.colors[ Math.floor( Math.random() * this.colors.length ) ];
+    }
+
+    this.renderedColors.push(color);
+    return color;
+  }
+
   renderData (data = []) {
     let totalWidth = 0;
     let totalHeight = 0;
@@ -424,13 +424,13 @@ class Chart {
 
       if (this.orientation === 'vertical') {
         const val = (typeof value === 'object') ? value.y:value;
-        x = totalWidth + this.spacing;
-        y = (val < 0) ? positive:(positive - proportions.height);
+        x = (totalWidth + this.spacing) + (0.5 + i);
+        y = (val < 0) ? (positive + 1.5):(positive - proportions.height - 0.5);
         totalWidth += (proportions.width + this.spacing);
       } else {
         const val = (typeof value === 'object') ? value.x:value;
-        x = (val > 0) ? positive:(positive - proportions.width);
-        y = totalHeight + this.spacing;
+        x = (val > 0) ? (positive + 1.5):(positive - proportions.width - 0.5);
+        y = (totalHeight + this.spacing) + (0.5 + i);
         totalHeight += (proportions.height + this.spacing);
       }
 
@@ -471,13 +471,13 @@ class Chart {
 
       if (this.orientation === 'vertical') {
         const val = (typeof value === 'object') ? value.y:value;
-        x = totalWidth + this.spacing;
-        y = (val < 0) ? positive:(positive - proportions.height);
+        x = (totalWidth + this.spacing) + (0.5 + i);
+        y = (val < 0) ? (positive + 1.5):(positive - proportions.height - 0.5);
         totalWidth += (proportions.width + this.spacing);
       } else {
         const val = (typeof value === 'object') ? value.x:value;
-        x = (val > 0) ? positive:(positive - proportions.width);
-        y = totalHeight + this.spacing;
+        x = (val > 0) ? (positive + 1.5):(positive - proportions.width - 0.5);
+        y = (totalHeight + this.spacing) + (0.5 + i);
         totalHeight += (proportions.height + this.spacing);
       }
 
