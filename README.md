@@ -34,23 +34,26 @@ To create a new chart you need a container element with a width and a height. Yo
 - `orientation (String)`
 Defines which orientation the chart should render in, vertical or horizontal. (`Default: vertical`)
 
-- `data (Array)`
-A list of values to be displayed in the chart. This property supports a variety of formats in the `Array`, as long as all items are either a `Number` or an `Object`.
+- `data (Array)`: A list of values to be displayed in the chart.
 
-- `iterations (Number or Object)`
-The number of iterations between 0 and the max value of one or both of the axies. You can either define the value as a Number, then it will be applied to both axies (if two axies are used). You can also define it as an Object and then define individual iterations for both axies.
+  - `entry (Number)`: A numeric value that represents one bar.
 
-- `titles (Array)`
-The titles to be rendered on either or both axies, which is the bold text on the top left of the chart on the Y-axis and on the bottom right on the X-axis. If you use only 1 axis, the chart will use only the first value in the Array. If you use both axies the chart requires two values in the `titles Array`.
+  - `entry (Object)`: An object containing the bar properties.
+    - `entry.value (Number)`: Used if the bar only has one value (one axis) and represents the main axis value.
+    - `entry.x (Number)`: Mainly used if the bar has two values (two axies) and represents the X-value.
+    - `entry.y (Number)`: Mainly used if the bar has two values (two axies) and represents the Y-value.
+    - `entry.color (String)`: The color of the bar in HEX-format.
+    > This is automatically randomized if not specified.
 
-- `hideTitles (Boolean)`
-Defines the hidden state of the chart titles on both axies. (`Default: false`)
+- `iterations (Number or Object)`: The number of iterations between 0 and the max value of one or both of the axies. You can either define the value as a Number, then it will be applied to both axies (if two axies are used). You can also define it as an Object and then define individual iterations for both axies.
 
-- `hideLabels (Boolean)`
-Defines the hidden state of the axis labels on both axies. (`Default: false`)
+- `titles (Array)`: The titles to be rendered on either or both axies, which is the bold text on the top left of the chart on the Y-axis and on the bottom right on the X-axis. If you use only 1 axis, the chart will use only the first value in the Array. If you use both axies the chart requires two values in the `titles Array`.
 
-- `hideLines (Boolean)`
-Defines the hidden state of the iteration lines in the chart. (`Default: false`)
+- `disable (Array)`: A list of properties to disable in the rendering of the chart. Supported values:
+
+  - `"titles"`: Disables the chart titles on both axies.
+  - `"labels"`: Disables the iteration labels on both axies.
+  - `"lines"`: Disables the iteration lines on both axies.
 
 ## License
 [MIT](LICENSE.md) © [Max Sandelin](https://github.com/themaxsandelin)
