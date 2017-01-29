@@ -8,8 +8,7 @@ class Chart {
     this.iterations = parameters.iterations || 0;
     this.spacing = parameters.spacing || 0;
 
-    this.hideLines = parameters.hideLines || false;
-    this.hideLabels = parameters.hideLabels || false;
+    this.disable = parameters.disable || [];
     this.hideTitles = parameters.hideTitles || !this.titles.length;
     this.responsive = (parameters.responsive === false || parameters.responsive === true) ? parameters.responsive:true;
 
@@ -183,7 +182,7 @@ class Chart {
   }
 
   renderTitles () {
-    if (this.hideTitles) return;
+    if (this.disable.indexOf("titles") > -1) return;
 
     if (this.singleAxis) {
       this.wrapper.classList.add('title' + this.mainAxis.toUpperCase());
@@ -225,19 +224,19 @@ class Chart {
     }
 
     if (!this.singleAxis) {
-      if (!this.hideLines) {
+      if (this.disable.indexOf("lines") === -1) {
         this.renderIterationLines('x');
         this.renderIterationLines('y');
       }
-      if (!this.hideLabels) {
+      if (this.disable.indexOf("labels") === -1) {
         this.renderIterationLabels('x');
         this.renderIterationLabels('y');
       }
       return;
     }
 
-    if (!this.hideLines) this.renderIterationLines( (this.orientation === 'vertical') ? 'y':'x' );
-    if (!this.hideLabels) this.renderIterationLabels( (this.orientation === 'vertical') ? 'y':'x' );
+    if (this.disable.indexOf("lines") === -1) this.renderIterationLines( (this.orientation === 'vertical') ? 'y':'x' );
+    if (this.disable.indexOf("labels") === -1) this.renderIterationLabels( (this.orientation === 'vertical') ? 'y':'x' );
   }
 
   renderIterationLines (axis) {
