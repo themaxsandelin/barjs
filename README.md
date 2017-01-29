@@ -15,7 +15,7 @@ Download the library and include both the `bar.js` as well as the `bar.css` in y
 > Node.js (npm) support coming soon
 
 ## Usage
-To create a new chart you need a container element with a width and a height. You then pass the selector of the element along with your preferred parameters into the `Chart object`. For example:
+To create a new chart you need a container element with a width and a height. You then pass the selector of the element along with your preferred parameters into the `Bar object`. For example:
 
 ```html
 <div id="chart" style="width: 720; height: 480px;"></div>
@@ -28,7 +28,7 @@ To create a new chart you need a container element with a width and a height. Yo
       data: [ 20, 18, 16, 15, 13, 10, 9, 8, 7, 4, 3, 2, 1, -2, -4 ]
     };
 
-    const chart = new Chart('#chart', params);
+    const barChart = new Bar('#chart', params);
 </script>
 ```
 
@@ -51,6 +51,8 @@ Defines which orientation the chart should render in, vertical or horizontal. (`
 - `iterations (Number or Object)`: The number of iterations between 0 and the max value of one or both of the axies. You can either define the value as a Number, then it will be applied to both axies (if two axies are used). You can also define it as an Object and then define individual iterations for both axies.
 
 - `titles (Array)`: The titles to be rendered on either or both axies, which is the bold text on the top left of the chart on the Y-axis and on the bottom right on the X-axis. If you use only 1 axis, the chart will use only the first value in the Array. If you use both axies the chart requires two values in the `titles Array`.
+
+- `spacing (Number)`: Specifies the spacing in between the bars in pixels.
 
 - `disable (Array)`: A list of properties to disable in the rendering of the chart. Supported values:
 

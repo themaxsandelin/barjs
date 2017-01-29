@@ -1,4 +1,4 @@
-class Chart {
+class Bar {
 
   constructor (selector, parameters) {
     this.data = parameters.data || [];
