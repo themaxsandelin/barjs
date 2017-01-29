@@ -1,5 +1,7 @@
 # Bar.js
 
+<img src="https://cloud.githubusercontent.com/assets/7646347/22403615/899c3bb2-e61d-11e6-83af-f3334ce8659e.jpg" width="100%">
+
 Bar.js is a JavaScript library generating HTML based bar charts. The library supports a wide range of use cases, including negative values, both vertical and horizontal charts as well as multiple axis data.
 
 ## Installation
