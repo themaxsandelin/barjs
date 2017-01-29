@@ -21,11 +21,14 @@ To create a new chart you need a container element with a width and a height. Yo
 <div id="chart" style="width: 720; height: 480px;"></div>
 
 <script>
-  const chart = new Chart('#chart', {
-    titles: [ 'Valuable values' ],
-    iterations: '3'
-    data: [ 1, 3, 3, 7 ]
-  });
+    const params = {
+      orientation: 'vertical',
+      titles: [ "Amazing data" ],
+      iterations: 3,
+      data: [ 20, 18, 16, 15, 13, 10, 9, 8, 7, 4, 3, 2, 1, -2, -4 ]
+    };
+
+    const chart = new Chart('#chart', params);
 </script>
 ```
 
