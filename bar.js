@@ -324,7 +324,7 @@ class Chart {
       const style = (axis === 'x') ? 'right':'top';
       const label = document.createElement('div');
       label.classList.add('label');
-      label.innerText = parseFloat(value * (iterations - i)).toFixed(1);
+      label.innerText = parseFloat(value * (iterations - i));
       label.style[style] = move;
 
       element.appendChild(label);
@@ -336,7 +336,7 @@ class Chart {
         const style = (axis === 'x') ? 'right':'top';
         const label = document.createElement('div');
         label.classList.add('label');
-        label.innerText = parseFloat(value * (j + 1)).toFixed(1) * -1;
+        label.innerText = parseFloat(value * (j + 1));
         label.style[style] = move;
 
         element.appendChild(label);
